@@ -32,7 +32,7 @@ const DueTaskschedule = async (phoneNumber) => {
 
 const VoiceCallTasks = () => {
     // every minute
-    cron.schedule('*/5 * * * * *', async () => {
+    cron.schedule('* */5 * * *', async () => {
         try {
             const tasks = await Task.find({
                 priority: 0, // Due today or overdue
