@@ -1,0 +1,27 @@
+Flow Of Task Management App:
+
+UserSignup/Login -> jwt generated -> use jwt in further apis for authentication->
+
+task creation -> subtask creation -> updation of both -> deletion.
+
+Cron Logic -> priorityupdate in every 12hours -> calling happen in every x minutes acc to the logic based on priority.
+
+Three Api's:
+1- User
+	A- user signup/login
+	B- getAlltasks
+	C- getAllsubtask
+
+2- task
+	A- task create
+	B- task update
+	C- task delete
+
+3- Subtask
+	A- subtask create
+	B- subtask update
+	C- subtask delete
+
+4- Cronjob
+	A-update priority
+	B-Voicecall acc to priority
