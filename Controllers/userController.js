@@ -49,7 +49,9 @@ const UserSignup = async (req, res) => {
 
         // Generating jwt token
         const tokenPayload = { userId: newUser._id, phone_no: newUser.phone_no };
-        const accessToken = jwt.sign(tokenPayload, process.env.SECRETKEY, { expiresIn: '365d' });
+        const accessToken = jwt.sign(tokenPayload, process.env.SECRETKEY, {
+            expiresIn: '1h' //update it accordingly, currenlty token expiery time is 1hour
+        });
 
         const user = await newUser.save();
         return res.status(200).json({
@@ -119,25 +121,20 @@ const UserLogin = async (req, res) => {
 
 
 const getAllTasks = async (req, res) => {
-
     try {
         const user_id = req.user._id.toString();
 
-        // finding user by id
+        // Finding user by id
         const user = await User.findById(user_id);
 
         if (!user) {
             return res.status(400).json({
                 success: false,
-                message: "user with this id not found",
-            })
+                message: "User with this id not found",
+            });
         }
 
         const { priority, due_date } = req.query;
-
-        // console.log(priority, due_date);
-
-
 
         // Pagination
         const page = parseInt(req.query.page) || 1;
@@ -145,6 +142,7 @@ const getAllTasks = async (req, res) => {
 
         const filterOptions = {
             user: user.id,
+            deleted_at: null, // Exclude soft-deleted tasks
         };
 
         if (priority !== undefined) {
@@ -152,27 +150,41 @@ const getAllTasks = async (req, res) => {
         }
 
         if (due_date !== undefined) {
-            // parsing date object 
+            // Parsing date object
             filterOptions.due_date = new Date(due_date);
         }
-        console.log("filter:", filterOptions);
+
+        console.log("Filter:", filterOptions);
 
         const tasks = await Task.find(filterOptions)
+            .populate({
+                path: 'subTasks',
+                match: { deleted_at: null }, // Exclude soft-deleted subtasks
+                select: '_id', // Only include the _id field of subtasks
+            })
+            .sort({ due_date: 1 }) // Sort by due_date, adjust as needed
             .limit(pageSize)
             .skip((page - 1) * pageSize);
 
-        console.log("filter:", tasks);
+        // Extract and format subtask IDs as an array of strings
+        const formattedTasks = tasks.map(task => {
+            return {
+                ...task.toObject(),
+                subTasks: task.subTasks.map(subtask => subtask._id.toString()),
+            };
+        });
 
+        console.log("Formatted Tasks:", formattedTasks);
 
-        res.status(200).json(tasks);
-
+        res.status(200).json(formattedTasks);
     } catch (err) {
         res.status(500).json({
             success: false,
-            err
+            error: 'Internal Server Error',
         });
     }
-}
+};
+
 
 const GetAllSubtasks = async (req, res) => {
     try {
@@ -209,8 +221,16 @@ const GetAllSubtasks = async (req, res) => {
             });
         }
 
+        // Check if the task has been deleted
+        if (task.deleted_at !== null) {
+            return res.status(400).json({
+                success: false,
+                message: "This task has been deleted",
+            });
+        }
+
         // Build the filter based on the provided status
-        const filterOptions = { task_id: task._id };
+        const filterOptions = { task_id: task._id, deleted_at: null };
         if (status !== undefined) {
             filterOptions.status = status;
         }

@@ -31,10 +31,11 @@ const DueTaskschedule = async (phoneNumber) => {
 };
 
 const VoiceCallTasks = () => {
-    // every minute
-    cron.schedule('* */5 * * *', async () => {
+    // every 5 minute
+    cron.schedule('*/5 * * * *', async () => {
         try {
             const tasks = await Task.find({
+                deleted_at: null,
                 priority: 0, // Due today or overdue
                 status: { $in: ['TODO', 'IN_PROGRESS'] },
             })

@@ -32,5 +32,5 @@ app.use("/api/tasks", TaskRoutes)
 app.use("/api/subtasks", SubTaskRoutes)
 
 // Start cron jobs after database connection
-DueTaskschedule.VoiceCallTasks(); // Call the overdue tasks cron job
-ScheduleUpdateTaskPriorities.ScheduleUpdateTaskPriorities(); // Call the task priority update cron job
+// DueTaskschedule.VoiceCallTasks(); // Call the overdue tasks cron job
+// ScheduleUpdateTaskPriorities.ScheduleUpdateTaskPriorities(); // Call the task priority update cron job
