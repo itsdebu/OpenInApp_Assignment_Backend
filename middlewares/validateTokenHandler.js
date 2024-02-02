@@ -22,13 +22,17 @@ const validateToken = async (req, res, next) => {
                     return res.status(401).json({ success: false, error: 'User not found' });
                 }
 
-                req.user = user; // Attach user information to the request object
+                console.log(user)
+
+                req.user = { _id: userId }
+
+                console.log(req.user._id)
                 return next(); // Call next to proceed to the next middleware or route handler
             } else {
                 return res.status(401).json({ success: false, error: 'Invalid token' });
             }
         } catch (err) {
-            return res.status(401).json({ success: false, error: 'User is not authorized' });
+            return res.status(401).json({ success: false, error: 'shobhan is not authorized or Invalid Token' });
         }
     } else {
         return res.status(401).json({ success: false, error: 'User is not authorized or token is missing' });

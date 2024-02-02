@@ -7,10 +7,10 @@ const { CreateTask, UpdateTask, DeleteTask, getSoftDeletedTasks } = require("../
 router.post("/create", validateToken, CreateTask);
 
 // Update Task
-router.put("/update/:task_id", validateToken, UpdateTask);
+router.post("/update", validateToken, UpdateTask);
 
 // Delete Task
-router.delete("/delete/:task_id", validateToken, DeleteTask);
+router.post("/delete", validateToken, DeleteTask);
 
 // Get Deleted Tasks
 router.get('/deletedTasks', validateToken, getSoftDeletedTasks);

@@ -5,7 +5,7 @@ const User = require('../models/UserModel')
 const createSubTask = async (req, res) => {
     try {
         const { task_id } = req.body;
-        const user_id = req.user._id.toString();
+        const user_id = req.user._id;
 
         // Validate task_id
         if (!task_id) {
@@ -16,23 +16,17 @@ const createSubTask = async (req, res) => {
         const task = await Task.findOne({ _id: task_id, user: user_id });
 
         if (!task) {
-            return res.status(404).json({ message: 'Task not found or unauthorized user' });
+            return res.status(404).json({ message: 'Task not found' });
         }
 
         // Create a subtask for the found task
         const subTask = await SubTask.create({ status: 0, task_id });
 
-        // Attach the subtask to the task
-        task.subTasks.push(subTask._id);
-        await task.save();
-
         if (task) {
             const subTasks = await SubTask.find({ task_id: task._id });
             const allSubTasksComplete = subTasks.every(subTask => subTask.status === 1);
 
-            if (allSubTasksComplete) {
-                task.status = 'DONE';
-            } else if (subTasks.some(subTask => subTask.status === 1)) {
+            if (subTasks.some(subTask => subTask.status === 1)) {
                 task.status = 'IN_PROGRESS';
             } else {
                 task.status = 'TODO';
@@ -51,7 +45,7 @@ const createSubTask = async (req, res) => {
 const updateSubTask = async (req, res) => {
     try {
         const { status } = req.body;
-        const user_id = req.user._id.toString();
+        const user_id = req.user._id
         const subTaskId = req.params.subTaskId;
 
         console.log(status, user_id, subTaskId);
@@ -75,7 +69,10 @@ const updateSubTask = async (req, res) => {
         const task = await Task.findById(subTask.task_id);
 
         if (task) {
-            const subTasks = await SubTask.find({ task_id: task._id });
+            const subTasks = await SubTask.find({
+                task_id: task._id,
+                deleted_at: null,
+            });
             const allSubTasksComplete = subTasks.every(subTask => subTask.status === 1);
 
             if (allSubTasksComplete) {
@@ -129,17 +126,18 @@ const deleteSubTask = async (req, res) => {
         // Update task status based on remaining subtasks
         if (remainingSubtasks.length > 0) {
             // If there are remaining subtasks, check if any of them has status 1
+            const isDone = remainingSubtasks.every(subtask => subtask.status === 1);
             const isInProgress = remainingSubtasks.some(subtask => subtask.status === 1);
 
-            if (isInProgress) {
-                task.status = 'IN_PROGRESS';
-            } else {
+            if (isDone) {
+                task.status = 'DONE';
+            } else if (isInProgress) {
                 // If all remaining subtasks have status 0, set task status to TODO
-                task.status = 'TODO';
+                task.status = 'IN_PROGRESS';
             }
         } else {
             // If there are no remaining subtasks, set task status to DONE
-            task.status = 'DONE';
+            task.status = 'TODO';
         }
 
         // Save the updated task status

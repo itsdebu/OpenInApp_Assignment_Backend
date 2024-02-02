@@ -47,13 +47,14 @@ const UserSignup = async (req, res) => {
             priority: priority,
         });
 
+        const user = await newUser.save();
+
         // Generating jwt token
         const tokenPayload = { userId: newUser._id, phone_no: newUser.phone_no };
         const accessToken = jwt.sign(tokenPayload, process.env.SECRETKEY, {
             expiresIn: '1h' //update it accordingly, currenlty token expiery time is 1hour
         });
 
-        const user = await newUser.save();
         return res.status(200).json({
             token: accessToken,
             user,
@@ -127,13 +128,6 @@ const getAllTasks = async (req, res) => {
         // Finding user by id
         const user = await User.findById(user_id);
 
-        if (!user) {
-            return res.status(400).json({
-                success: false,
-                message: "User with this id not found",
-            });
-        }
-
         const { priority, due_date } = req.query;
 
         // Pagination
@@ -157,26 +151,26 @@ const getAllTasks = async (req, res) => {
         console.log("Filter:", filterOptions);
 
         const tasks = await Task.find(filterOptions)
-            .populate({
-                path: 'subTasks',
-                match: { deleted_at: null }, // Exclude soft-deleted subtasks
-                select: '_id', // Only include the _id field of subtasks
-            })
+            // .populate({
+            //     path: 'subTasks',
+            //     match: { deleted_at: null }, // Exclude soft-deleted subtasks
+            //     select: '_id', // Only include the _id field of subtasks
+            // })
             .sort({ due_date: 1 }) // Sort by due_date, adjust as needed
             .limit(pageSize)
             .skip((page - 1) * pageSize);
 
         // Extract and format subtask IDs as an array of strings
-        const formattedTasks = tasks.map(task => {
-            return {
-                ...task.toObject(),
-                subTasks: task.subTasks.map(subtask => subtask._id.toString()),
-            };
-        });
+        // const formattedTasks = tasks.map(task => {
+        //     return {
+        //         ...task.toObject(),
+        //         subTasks: task.subTasks.map(subtask => subtask._id.toString()),
+        //     };
+        // });
 
-        console.log("Formatted Tasks:", formattedTasks);
+        // console.log("Formatted Tasks:", formattedTasks);
 
-        res.status(200).json(formattedTasks);
+        res.status(200).json(tasks);
     } catch (err) {
         res.status(500).json({
             success: false,
@@ -199,15 +193,6 @@ const GetAllSubtasks = async (req, res) => {
             return res.status(400).json({
                 status: false,
                 message: "task_id is required",
-            });
-        }
-
-        const user = await User.findById(user_id);
-
-        if (!user) {
-            return res.status(400).json({
-                success: false,
-                message: "user with this id not found",
             });
         }
 

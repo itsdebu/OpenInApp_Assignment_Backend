@@ -32,7 +32,7 @@ const DueTaskschedule = async (phoneNumber) => {
 
 const VoiceCallTasks = () => {
     // every 5 minute
-    cron.schedule('*/5 * * * *', async () => {
+    cron.schedule('*/10 * * * * *', async () => {
         try {
             const tasks = await Task.find({
                 deleted_at: null,

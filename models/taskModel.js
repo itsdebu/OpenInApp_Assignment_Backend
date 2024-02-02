@@ -29,10 +29,6 @@ const taskSchema = new mongoose.Schema({
         ref: 'User',
         required: true,
     },
-    subTasks: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'SubTask',
-    }],
     deleted_at: {
         type: Date,
         default: null,

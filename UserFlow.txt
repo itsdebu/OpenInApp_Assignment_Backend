@@ -31,7 +31,7 @@ Three Api's:
 Edge Cases:
 1. Status of tasks should not be in hand of user it should be changed acc to the subtasks status.
 
-2. When all the subtask is deleted then status should be TODO again.
+2. When all the subtask is deleted then status should be TODO/DONE again.
 
 3. After Soft Deletion task or subtask should not be visibe in get all apis.
 
