@@ -15,13 +15,30 @@ Three Api's:
 2- task
 	A- task create
 	B- task update
-	C- task delete
+	C- task delete(Soft)
+	D- deleted task
 
 3- Subtask
 	A- subtask create
 	B- subtask update
-	C- subtask delete
-
+	C- subtask delete(Soft)
+	D- deleted Subtask
 4- Cronjob
 	A-update priority
 	B-Voicecall acc to priority
+
+
+Edge Cases:
+1. Status of tasks should not be in hand of user it should be changed acc to the subtasks status.
+
+2. When all the subtask is deleted then status should be TODO again.
+
+3. After Soft Deletion task or subtask should not be visibe in get all apis.
+
+4. When a task is deleted then its subtask should also be deleted (Soft Deletion).
+
+5. User Can also get then deleted task or subtask.
+
+6. while creating subtask the status should be updated.
+
+7. While deleted of subtask the status should be updated.

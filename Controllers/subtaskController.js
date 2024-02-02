@@ -121,14 +121,25 @@ const deleteSubTask = async (req, res) => {
         await subTask.save();
 
         // Checking if there are any remaining non-deleted subtasks
-        const remainingSubtasks = await SubTask.findOne({
+        const remainingSubtasks = await SubTask.find({
             task_id: task._id,
             deleted_at: null,
         });
 
         // Update task status based on remaining subtasks
-        if (!remainingSubtasks) {
-            task.status = 'TODO';
+        if (remainingSubtasks.length > 0) {
+            // If there are remaining subtasks, check if any of them has status 1
+            const isInProgress = remainingSubtasks.some(subtask => subtask.status === 1);
+
+            if (isInProgress) {
+                task.status = 'IN_PROGRESS';
+            } else {
+                // If all remaining subtasks have status 0, set task status to TODO
+                task.status = 'TODO';
+            }
+        } else {
+            // If there are no remaining subtasks, set task status to DONE
+            task.status = 'DONE';
         }
 
         // Save the updated task status
