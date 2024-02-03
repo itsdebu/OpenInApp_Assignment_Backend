@@ -1,18 +1,21 @@
 const express = require("express");
 const router = express.Router();
-const { validateToken } = require("../middlewares/validateTokenHandler");
-const { CreateTask, UpdateTask, DeleteTask, getSoftDeletedTasks } = require("../Controllers/taskController");
+const { CreateTask, UpdateTask, DeleteTask, getSoftDeletedTasks, getAllTasks } = require("../Controllers/taskController");
 
 // Create Task
-router.post("/create", validateToken, CreateTask);
+router.post("/create", CreateTask);
 
 // Update Task
-router.post("/update", validateToken, UpdateTask);
+router.post("/update", UpdateTask);
 
 // Delete Task
-router.post("/delete", validateToken, DeleteTask);
+router.post("/delete", DeleteTask);
 
 // Get Deleted Tasks
-router.get('/deletedTasks', validateToken, getSoftDeletedTasks);
+router.get('/deletedTasks', getSoftDeletedTasks);
+
+// Get all tasks for a user
+router.get("/all", getAllTasks);
+
 
 module.exports = router;

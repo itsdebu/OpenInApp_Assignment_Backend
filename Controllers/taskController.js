@@ -1,8 +1,5 @@
-const express = require("express")
-const Task = require("../models/taskModel")
-const User = require("../models/UserModel")
-const SubTask = require("../models/subtaskModel")
-
+const { User, Task, SubTask } = require('../models')
+const { getPriority } = require('../utils/priority')
 
 const CreateTask = async (req, res) => {
     try {
@@ -13,40 +10,16 @@ const CreateTask = async (req, res) => {
             return res.status(400).json({ error: 'Title, description, and due_date are required fields' });
         }
 
+        const priority = getPriority(due_date);
 
-        const currentDate = new Date();
         const dueDate = new Date(due_date);
-
-        // Check if the date is valid
-        // YYYY-MM-DD
-        if (isNaN(dueDate.getTime())) {
-            return res.status(400).json({ error: 'Invalid date format for due_date should be in format YYYY-MM-DD ' });
-        }
-
-
-        const timeDifference = dueDate.getTime() - currentDate.getTime();
-        const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-
-        let priority = 0;
-
-        if (daysDifference <= 0) {
-            priority = 0;
-        } else if (daysDifference <= 2) {
-            priority = 1;
-        } else if (daysDifference <= 4) {
-            priority = 2;
-        } else if (daysDifference <= 5) {
-            priority = 3;
-        } else {
-            priority = 3;
-        }
 
         const newTask = new Task({
             title,
             description,
             due_date: dueDate,
             priority,
-            user: req.user._id, // Use req.user._id consistently, assuming the 'user' field in Task model is for the User reference
+            user: req.user._id,
         });
 
         await newTask.save();
@@ -90,43 +63,13 @@ const UpdateTask = async (req, res) => {
         }
 
         if (due_date) {
-            const currentDate = new Date();
-            const dueDate = new Date(due_date);
-
-            // Check if the date is valid
-            // YYYY-MM-DD
-            if (isNaN(dueDate.getTime())) {
-                return res.status(400).json({ error: 'Invalid date format for due_date, should be in format YYYY-MM-DD' });
-            }
-
-            // Validate that due_date is in the future or today
-            if (dueDate.getTime() < currentDate.getTime()) { // Fix: Use getTime() for comparison
-                return res.status(400).json({ error: 'Due date must be in the future or today' });
-            }
-
-            // Recalculate priority based on due_date
-            const timeDifference = dueDate.getTime() - currentDate.getTime();
-            const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-
-            if (daysDifference <= 0) {
-                updateData.priority = 0;
-            } else if (daysDifference <= 2) {
-                updateData.priority = 1;
-            } else if (daysDifference <= 3) {
-                updateData.priority = 2;
-            } else if (daysDifference <= 5) {
-                updateData.priority = 3;
-            } else {
-                // Handle cases where the due date is more than 5 days from today
-                // You may adjust this logic based on your specific requirements
-                updateData.priority = 3;
-            }
+            updateData.priority = getPriority(due_date);
             updateData.due_date = due_date;
         }
 
 
 
-        const task = await Task.findOneAndUpdate({ _id: task_id, user: req.user._id },
+        const task = await Task.findOneAndUpdate({ _id: task_id },
             updateData,
             { new: true }
         );
@@ -147,10 +90,9 @@ const UpdateTask = async (req, res) => {
 const DeleteTask = async (req, res, next) => {
     try {
         const { task_id } = req.body;
-        const user_id = req.user._id;
 
         // Assuming 'task_id' and 'user_id' are already defined
-        let filterOptions = { _id: task_id, user: user_id, deleted_at: null };
+        let filterOptions = { _id: task_id, deleted_at: null };
 
         // Soft delete the task
         const result = await Task.updateOne(filterOptions, { $set: { deleted_at: new Date() } });
@@ -160,21 +102,22 @@ const DeleteTask = async (req, res, next) => {
             return res.status(404).json({ error: 'Task not found or unauthorized user' });
         }
 
-        filterOptions = { task_id };
+        filterOptions = { task_id: task_id }; // Correct the filter for subtasks
 
         // Soft delete associated subtasks
         await SubTask.updateMany(filterOptions, { $set: { deleted_at: new Date() } });
 
         return res.status(200).json({ message: 'Task and associated subtasks deleted successfully' });
     } catch (error) {
-        return res.status(404).json({ error });
+        return res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
+
 const getSoftDeletedTasks = async (req, res) => {
     try {
-        const user_id = req.user.id;
-
+        const user_id = req.user._id;
+        console.log(user_id);
         // Find all soft-deleted tasks for the user
         const softDeletedTasks = await Task.find({
             user: user_id,
@@ -183,9 +126,71 @@ const getSoftDeletedTasks = async (req, res) => {
 
         res.status(200).json({ softDeletedTasks });
     } catch (error) {
+        res.status(500).json({
+            message: error.message
+        })
         console.error(error);
-        res.status(500).json({ message: 'Internal Server Error', error });
+    }
+}
+
+
+const getAllTasks = async (req, res) => {
+    try {
+        const user_id = req.user._id;
+
+        // Finding user by id
+        const user = await User.findById(user_id);
+
+        const { priority, due_date } = req.query;
+
+        // Pagination
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 10;
+
+        const filterOptions = {
+            user: user.id,
+            deleted_at: null, // Exclude soft-deleted tasks
+        };
+
+        if (priority !== undefined) {
+            filterOptions.priority = priority;
+        }
+
+        if (due_date !== undefined) {
+            // Parsing date object
+            filterOptions.due_date = new Date(due_date);
+        }
+
+        console.log("Filter:", filterOptions);
+
+        const tasks = await Task.find(filterOptions)
+            // .populate({
+            //     path: 'subTasks',
+            //     match: { deleted_at: null }, // Exclude soft-deleted subtasks
+            //     select: '_id', // Only include the _id field of subtasks
+            // })
+            .sort({ due_date: 1 }) // Sort by due_date, adjust as needed
+            .limit(pageSize)
+            .skip((page - 1) * pageSize);
+
+        // Extract and format subtask IDs as an array of strings
+        // const formattedTasks = tasks.map(task => {
+        //     return {
+        //         ...task.toObject(),
+        //         subTasks: task.subTasks.map(subtask => subtask._id.toString()),
+        //     };
+        // });
+
+        // console.log("Formatted Tasks:", formattedTasks);
+
+        res.status(200).json(tasks);
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: 'Internal Server Error',
+        });
     }
 };
 
-module.exports = { CreateTask, UpdateTask, DeleteTask, getSoftDeletedTasks }
+
+module.exports = { CreateTask, UpdateTask, DeleteTask, getSoftDeletedTasks, getAllTasks }

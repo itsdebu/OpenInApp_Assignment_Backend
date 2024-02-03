@@ -1,18 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const { createSubTask, updateSubTask, deleteSubTask, getSoftDeletedSubtasks } = require('../Controllers/subtaskController');
-const { validateToken } = require('../middlewares/validateTokenHandler')
+const { createSubTask, updateSubTask, deleteSubTask, getSoftDeletedSubtasks, GetAllSubtasks } = require('../Controllers/subtaskController');
 
 // Create a new subtask
-router.post('/create', validateToken, createSubTask);
+router.post('/create', createSubTask);
 
 // Update an existing subtask
-router.put('/update/:subTaskId', validateToken, updateSubTask);
+router.post('/update', updateSubTask);
 
 // Delete a subtask
-router.delete('/delete/:subTaskId', validateToken, deleteSubTask);
+router.post('/delete', deleteSubTask);
 
 // Get Deleted Subtasks
-router.get('/deletedSubtasks/:task_id', validateToken, getSoftDeletedSubtasks)
+router.get('/deletedSubtasks/:task_id', getSoftDeletedSubtasks)
+
+// Get all subtasks for a task
+router.get("/all", GetAllSubtasks);
 
 module.exports = router;

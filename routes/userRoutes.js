@@ -9,10 +9,4 @@ router.post("/signup", UserSignup);
 // User Login
 router.post("/login", UserLogin);
 
-// Get all tasks for a user
-router.get("/tasks", validateToken, getAllTasks);
-
-// Get all subtasks for a task
-router.get("/subtasks", validateToken, GetAllSubtasks);
-
 module.exports = router;

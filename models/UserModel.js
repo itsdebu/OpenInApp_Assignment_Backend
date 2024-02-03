@@ -13,6 +13,10 @@ const userSchema = new mongoose.Schema({
         enum: [0, 1, 2],
         default: 0,
     },
+    password: {
+        type: String,
+        required: true,
+    }
 
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } })
 

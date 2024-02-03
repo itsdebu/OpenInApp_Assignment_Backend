@@ -1,13 +1,12 @@
 const express = require("express");
+const bodyParser = require('body-parser');
 const app = express();
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const connectdb = require("./config/dbConnection");
-const userRoutes = require("./routes/userRoutes")
-const TaskRoutes = require("./routes/taskRoutes")
-const SubTaskRoutes = require("./routes/SubtaskRoutes")
-const DueTaskschedule = require("./CronJobs/TwilioPhoneCron")
-const ScheduleUpdateTaskPriorities = require("./CronJobs/TaskPriorityCron")
+const { validateToken } = require('./middlewares/validateTokenHandler')
+const { userRoutes, TaskRoutes, SubTaskRoutes } = require('./routes')
+const { DueTaskschedule, ScheduleUpdateTaskPriorities } = require('./CronJobs')
 
 
 dotenv.config();   // Load environment variables from .env file
@@ -24,12 +23,11 @@ app.listen(port, (req, res) => {
     console.log(`server is running on ${port}`)
 });
 
-//middleware
 app.use(express.json());
-
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/api/users", userRoutes)
-app.use("/api/tasks", TaskRoutes)
-app.use("/api/subtasks", SubTaskRoutes)
+app.use("/api/tasks", validateToken, TaskRoutes)
+app.use("/api/subtasks", validateToken, SubTaskRoutes)
 
 // Start cron jobs after database connection
 // DueTaskschedule.VoiceCallTasks(); // Call the overdue tasks cron job
