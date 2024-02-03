@@ -1,6 +1,7 @@
 const cron = require('node-cron');
-const Task = require('../models/taskModel'); // Assuming you have a Mongoose model for Task
 require('dotenv').config();
+const Task = require('../models/taskModel');
+const { getPriority } = require('../utils/priority')
 
 const UpdateTaskPriority = async () => {
     console.log(`Task priorities updated at ${new Date()}`);
@@ -8,26 +9,7 @@ const UpdateTaskPriority = async () => {
     try {
         const tasks = await Task.find({ deleted_at: null });
         for (const task of tasks) {
-            const currentDate = new Date();
-            const dueDate = new Date(task.due_date);
-            const timeDifference = dueDate.getTime() - currentDate.getTime();
-            const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-
-            let priority = 0;
-
-            if (daysDifference <= 0) {
-                priority = 0;
-            } else if (daysDifference <= 2) {
-                priority = 1;
-            } else if (daysDifference <= 4) {
-                priority = 2;
-            } else if (daysDifference <= 5) {
-                priority = 3;
-            } else {
-                // Handle cases where the due date is more than 5 days from today
-                priority = 3;
-            }
-            const newPriority = priority;
+            const newPriority = getPriority(task.due_date);
 
             await Task.findByIdAndUpdate(task._id, { priority: newPriority });
             console.log('Task priorities updated successfully.');
