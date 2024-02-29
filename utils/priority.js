@@ -22,6 +22,12 @@ const getPriority = (due_date) => {
     const timeDifference = dueDate.getTime() - currentDate.getTime();
     const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
 
+    if (daysDifference < 0) {
+        return res.status(400).json({
+            message: "due date should only be for the future"
+        })
+    }
+
     let priority = 0;
 
     if (daysDifference <= 0) {
