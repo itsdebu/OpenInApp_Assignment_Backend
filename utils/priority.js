@@ -12,8 +12,7 @@ const getPriority = (due_date) => {
 
     console.log(currentDate);
 
-    // Check if the date is valid
-    // YYYY-MM-DD
+    // YYYY-MM-DD (Date Format)
     if (isNaN(dueDate.getTime())) {
         return res.status(400).json({ error: 'Invalid date format for due_date should be in format YYYY-MM-DD ' });
     }

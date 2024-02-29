@@ -1,6 +1,7 @@
 const { User, Task, SubTask } = require('../models')
 const { getPriority } = require('../utils/priority')
 
+// All Task Api's
 const CreateTask = async (req, res) => {
     try {
         const { title, description, due_date } = req.body;

@@ -29,7 +29,7 @@ app.use("/api/users", userRoutes)
 app.use("/api/tasks", validateToken, TaskRoutes)
 app.use("/api/subtasks", validateToken, SubTaskRoutes)
 
-// Start cron jobs after database connection
+// Start cron jobs after database connection.
 
 // DueTaskschedule.VoiceCallTasks(); // Call the overdue tasks cron job
 // ScheduleUpdateTaskPriorities.ScheduleUpdateTaskPriorities(); // Call the task priority update cron job

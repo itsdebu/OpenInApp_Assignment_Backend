@@ -3,7 +3,7 @@ const connection = mongoose.connection
 
 //Connecting to mongodb database
 const connectdb = async () => {
-    //first try connecting
+    // trying connection with mongodb database
     try {
         const connect = await mongoose.connect(process.env.CONNECTION_STRING);
         console.log("Connected to Database successfully",

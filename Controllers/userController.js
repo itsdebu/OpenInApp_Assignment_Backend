@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt')
 const { User } = require('../models')
 const { signUpValidator, loginValidator } = require('../validators/user')
 
-
+// All User Api's
 const UserSignup = async (req, res) => {
     const { error } = signUpValidator.validate(req.body);
 

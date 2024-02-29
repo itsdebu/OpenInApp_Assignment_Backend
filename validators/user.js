@@ -12,3 +12,5 @@ const loginValidator = Joi.object({
 });
 
 module.exports = { signUpValidator, loginValidator }
+
+// User Api Validation..
